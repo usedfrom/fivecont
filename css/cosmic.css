@@ -118,11 +118,50 @@ body {
     transform: scale(1.1);
 }
 
+.alien-button-large {
+    width: 80px;
+    height: 80px;
+}
+
 #downloadAllButton, #downloadNoZipButton {
     width: auto;
     padding: 0.5rem 1rem;
     border-radius: 20px;
     font-size: 1rem;
+}
+
+.input-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid var(--alien-red);
+    border-radius: 10px;
+}
+
+.input-panel input {
+    flex: 1;
+    padding: 0.8rem;
+    background: var(--alien-black);
+    border: 1px solid var(--alien-red);
+    border-radius: 8px;
+    color: var(--alien-white);
+    font-family: 'Courier New', monospace;
+    font-size: 1.2rem;
+    outline: none;
+    transition: all 0.3s;
+}
+
+.input-panel input:focus {
+    border-color: var(--alien-fire-red);
+    box-shadow: var(--alien-glow);
+}
+
+.input-panel input::placeholder {
+    color: var(--alien-dark-red);
+    opacity: 0.7;
 }
 
 @media (max-width: 768px) {
@@ -142,6 +181,10 @@ body {
     .alien-button {
         width: 32px;
         height: 32px;
+    }
+    .alien-button-large {
+        width: 64px;
+        height: 64px;
     }
     #downloadAllButton, #downloadNoZipButton {
         font-size: 0.9rem;

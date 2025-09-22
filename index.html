@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ВНЕЗЕМНОЙ AI :: КОНТЕНТ</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/cosmic.css">
+    <link href="https://fonts.googleapis.com/css2?family=Arial+Black&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="alien-background"></div>
+    <main class="mainframe">
+        <div class="chat-body" id="chatBody"></div>
+        <div class="image-carousel" id="imageOutput"></div>
+        <div class="download-all">
+            <button class="alien-button" id="downloadAllButton" style="display: none;">
+                <i class="fas fa-download"></i> Скачать все (ZIP)
+            </button>
+            <button class="alien-button" id="downloadNoZipButton" style="display: none;">
+                <i class="fas fa-file-image"></i> Скачать без архива
+            </button>
+        </div>
+        <div class="input-panel">
+            <input type="text" id="userInput" placeholder="Введите 'контент [тема]'...">
+            <div class="alien-button" id="textButton">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+            <div class="alien-button" id="voiceButton">
+                <i class="fas fa-microphone"></i>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="/js/cosmic.js"></script>
+</body>
+</html>

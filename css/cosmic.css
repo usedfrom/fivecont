@@ -1,0 +1,153 @@
+:root {
+    --alien-black: #000000;
+    --alien-dark: #1a0000;
+    --alien-red: #ff0000;
+    --alien-dark-red: #8b0000;
+    --alien-fire-red: #b22222;
+    --alien-white: #f0f0f0;
+    --alien-glow: 0 0 12px rgba(255, 0, 0, 0.7);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--alien-black);
+    color: var(--alien-white);
+    font-family: 'Courier New', monospace;
+    overflow-y: auto;
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+.alien-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, var(--alien-dark) 0%, var(--alien-black) 100%);
+    z-index: -1;
+}
+
+.mainframe {
+    width: 95%;
+    max-width: 600px;
+    margin: 1rem auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 80vh;
+    z-index: 10;
+}
+
+.chat-body {
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid var(--alien-red);
+    border-radius: 10px;
+    color: var(--alien-white);
+    font-size: 1.2rem;
+}
+
+.chat-message {
+    margin: 0.5rem 0;
+    font-size: 1.2rem;
+    line-height: 1.4;
+}
+
+.chat-message.user {
+    color: var(--alien-dark-red);
+}
+
+.chat-message.agent {
+    color: var(--alien-white);
+}
+
+.image-carousel {
+    display: flex;
+    overflow-x: auto;
+    gap: 1rem;
+    margin: 1rem 0;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid var(--alien-red);
+    border-radius: 10px;
+}
+
+.carousel-item {
+    flex: 0 0 auto;
+    width: 300px;
+}
+
+.carousel-item img {
+    max-width: 100%;
+    border: 1px solid var(--alien-red);
+    border-radius: 10px;
+}
+
+.download-all {
+    text-align: center;
+    margin: 1rem 0;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.alien-button {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--alien-red);
+    border-radius: 50%;
+    color: var(--alien-white);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.alien-button:hover {
+    box-shadow: var(--alien-glow);
+    transform: scale(1.1);
+}
+
+#downloadAllButton, #downloadNoZipButton {
+    width: auto;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    .mainframe {
+        width: 98%;
+        padding: 0.5rem;
+    }
+    .chat-message {
+        font-size: 1rem;
+    }
+    .input-panel {
+        padding: 0.5rem;
+    }
+    .input-panel input {
+        font-size: 1rem;
+    }
+    .alien-button {
+        width: 32px;
+        height: 32px;
+    }
+    #downloadAllButton, #downloadNoZipButton {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+    }
+    .carousel-item {
+        width: 200px;
+    }
+}

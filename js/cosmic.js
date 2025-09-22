@@ -142,7 +142,6 @@ document.addEventListener('DOMContentLoaded', function() {
 4. Парадокс выбора — "Свобода х Варианты = Паралич"\nОбъяснение: Чем больше вариантов — тем сложнее выбрать. Свобода может превратиться в пытку.\nP.S.: Барри Шварц написал книгу «Парадокс выбора» — бестселлер в психологии.
 5. Эффект “Зомби-компьютера” — "Сон х Экран = Бессознательное действие"\nОбъяснение: Люди продолжают листать ленту, даже когда уже спят — мозг на автопилоте.\nP.S.: Исследования MIT показали: 70% пользователей делают это ежедневно.
 6. “Синдром разбитых окон” — "Беспорядок х Безнаказанность = Рост преступности"\nОбъяснение: Если не чинить мелкие нарушения — растёт уровень серьёзных преступлений.\nP.S.: Применялся в Нью-Йорке в 90-х. Преступность упала на 75%.
-7. “Феномен слепого зрения” — "Глаз х Мозг ≠ Видение"\nОбъяснение: Люди с повреждённой зрительной корой “не видят”, но уверенно обходят препятствия — сознание не нужно для восприятия.\nP.S.: Нейробиологи называют это “blindsight” — доказательство: 90% обработки информации — бессознательно.
 Отвечай на русском, кратко, ёмко, понятно.`;
         } else {
             systemPrompt = 'Ты — AI-психолог с юмором. Отвечай: \n\n[Что если]: [Остроумная фраза].\n\n[Значит]: [Мотивирующее объяснение].';
@@ -202,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function generateUniqueBackground(imgCtx, width, height) {
-        const gradient = imgCtx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, 600);
+        const gradient = imgCtx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width / 2);
         gradient.addColorStop(0, '#1a0000');
         gradient.addColorStop(1, '#000000');
         imgCtx.fillStyle = gradient;
@@ -264,24 +263,24 @@ document.addEventListener('DOMContentLoaded', function() {
     function generateImage(text, index) {
         const imgCanvas = document.createElement('canvas');
         imgCanvas.width = 540;
-        imgCanvas.height = 960;
+        imgCanvas.height = 540;
         const imgCtx = imgCanvas.getContext('2d');
 
-        generateUniqueBackground(imgCtx, 540, 960);
+        generateUniqueBackground(imgCtx, 540, 540);
 
         imgCtx.textAlign = 'left';
         imgCtx.textBaseline = 'top';
         const lines = text.split('\n').filter(line => line.trim());
-        let y = 50;
+        let y = 30;
         const maxWidth = 460;
-        const lineHeight = 40;
+        const lineHeight = 32;
 
         lines.forEach(line => {
             if (line.match(/^["'].*["']|^[^ОбъяснениеP.S.:].*/)) {
-                imgCtx.font = 'bold 32px "Arial Black"';
+                imgCtx.font = 'bold 24px "Arial Black"';
                 imgCtx.fillStyle = '#ff0000';
             } else {
-                imgCtx.font = 'bold 28px "Courier New"';
+                imgCtx.font = 'bold 20px "Courier New"';
                 imgCtx.fillStyle = '#f0f0f0';
             }
             const words = line.split(' ');
@@ -338,26 +337,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const imgCanvas = document.createElement('canvas');
         imgCanvas.width = 540;
-        imgCanvas.height = 960;
+        imgCanvas.height = 540;
         const imgCtx = imgCanvas.getContext('2d');
 
-        generateUniqueBackground(imgCtx, 540, 960);
+        generateUniqueBackground(imgCtx, 540, 540);
 
         imgCtx.textAlign = 'left';
         imgCtx.textBaseline = 'top';
-        let y = 50;
+        let y = 30;
         const maxWidth = 460;
-        const lineHeight = 40;
+        const lineHeight = 32;
 
         // Отрисовка "Поставь Лайк ведь:" в красном цвете
-        imgCtx.font = 'bold 32px "Arial Black"';
+        imgCtx.font = 'bold 24px "Arial Black"';
         imgCtx.fillStyle = '#ff0000';
         let currentLine = 'Поставь Лайк ведь:';
         imgCtx.fillText(currentLine, 40, y);
         y += lineHeight * 1.2;
 
         // Отрисовка случайного сообщения в белом цвете
-        imgCtx.font = 'bold 28px "Courier New"';
+        imgCtx.font = 'bold 20px "Courier New"';
         imgCtx.fillStyle = '#f0f0f0';
         const lines = randomMessage.split('\n').length > 1 ? randomMessage.split('\n') : randomMessage.match(/.{1,30}(\s|$)/g);
         lines.forEach(line => {
@@ -424,4 +423,3 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-

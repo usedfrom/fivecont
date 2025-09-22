@@ -230,22 +230,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function distributeTextOnImages(paragraphs) {
         imageOutput.innerHTML = '';
-        const images = [[], [], [], [], []];
+        const images = [[], [], [], [], [], [], []];
         let currentImage = 0;
 
         paragraphs.forEach(paragraph => {
-            if (currentImage < 5) {
+            if (currentImage < 7) {
                 const lines = paragraph.split('\n').filter(line => line.trim());
                 images[currentImage].push(...lines);
                 currentImage++;
             }
         });
 
-        // Распределяем оставшиеся строки, если абзацев меньше 5
-        if (currentImage < 5 && paragraphs.length > 0) {
+        // Распределяем оставшиеся строки, если абзацев меньше 7
+        if (currentImage < 7 && paragraphs.length > 0) {
             const remainingLines = paragraphs.join('\n').split('\n').filter(line => line.trim());
             let lineIndex = 0;
-            while (currentImage < 5 && lineIndex < remainingLines.length) {
+            while (currentImage < 7 && lineIndex < remainingLines.length) {
                 images[currentImage].push(remainingLines[lineIndex]);
                 lineIndex++;
                 currentImage++;
@@ -318,6 +318,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function generateSubscriptionImage() {
+        const subscriptionMessages = [
+            'Мы больше не пересечёмся — если ты не подпишешься. Это твой последний шанс меня увидеть.',
+            'Ты не увидишь меня снова — если не нажмёшь “подписаться”. Решай.',
+            'Это — последний раз, когда ты меня видишь. Если не подпишешься.',
+            'Мы не встретимся в ленте — если ты не подпишешься сейчас.',
+            'Ты пролистнешь — и я исчезну из твоей жизни. Подпишись, пока не поздно.',
+            'Если ты не подпишешься — я просто перестану для тебя существовать.',
+            'Ты не увидишь, что будет дальше — если не подпишешься. Это факт.',
+            'Мы больше не увидимся. Точнее — ты меня не увидишь. Подпишись, и я останусь.',
+            'Алгоритм не покажет меня тебе снова — если ты не подпишешься прямо сейчас.',
+            'Это конец. Если ты не подпишешься — ты меня больше не найдёшь.'
+        ];
+        const randomMessage = subscriptionMessages[Math.floor(Math.random() * subscriptionMessages.length)];
+
         const imgCanvas = document.createElement('canvas');
         imgCanvas.width = 540;
         imgCanvas.height = 960;
@@ -330,8 +344,8 @@ document.addEventListener('DOMContentLoaded', function() {
         imgCtx.textAlign = 'left';
         imgCtx.textBaseline = 'top';
 
-        const text = 'Мы скорее всего\nбольше не увидимся!\nЕсли было интересно,\nподпишись на наш канал!';
-        const lines = text.split('\n');
+        const text = randomMessage;
+        const lines = text.split('\n').length > 1 ? text.split('\n') : text.match(/.{1,30}(\s|$)/g);
         let y = 50;
         const maxWidth = 460;
         const lineHeight = 40;

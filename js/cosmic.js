@@ -342,20 +342,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
         generateUniqueBackground(imgCtx, 540, 960);
 
-        imgCtx.font = 'bold 32px "Courier New"';
-        imgCtx.fillStyle = '#f0f0f0';
         imgCtx.textAlign = 'left';
         imgCtx.textBaseline = 'top';
-
-        const text = randomMessage;
-        const lines = text.split('\n').length > 1 ? text.split('\n') : text.match(/.{1,30}(\s|$)/g);
         let y = 50;
         const maxWidth = 460;
         const lineHeight = 40;
 
+        // Отрисовка "Поставь Лайк ведь:" в красном цвете
+        imgCtx.font = 'bold 32px "Arial Black"';
+        imgCtx.fillStyle = '#ff0000';
+        let currentLine = 'Поставь Лайк ведь:';
+        imgCtx.fillText(currentLine, 40, y);
+        y += lineHeight * 1.2;
+
+        // Отрисовка случайного сообщения в белом цвете
+        imgCtx.font = 'bold 28px "Courier New"';
+        imgCtx.fillStyle = '#f0f0f0';
+        const lines = randomMessage.split('\n').length > 1 ? randomMessage.split('\n') : randomMessage.match(/.{1,30}(\s|$)/g);
         lines.forEach(line => {
             const words = line.split(' ');
-            let currentLine = '';
+            currentLine = '';
             for (let word of words) {
                 const testLine = currentLine + word + ' ';
                 const metrics = imgCtx.measureText(testLine);
@@ -417,4 +423,3 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-

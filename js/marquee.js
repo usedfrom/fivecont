@@ -1,0 +1,223 @@
+document.addEventListener('DOMContentLoaded', function() {
+    const marqueeModal = document.getElementById('marqueeModal');
+    const marqueeText = document.getElementById('marqueeText');
+    const useAIText = document.getElementById('useAIText');
+    const marqueeSpeed = document.getElementById('marqueeSpeed');
+    const fontColor = document.getElementById('fontColor');
+    const fontFamily = document.getElementById('fontFamily');
+    const effectType = document.getElementById('effectType');
+    const backgroundImage = document.getElementById('backgroundImage');
+    const marqueePreview = document.getElementById('marqueePreview');
+    const saveVideo = document.getElementById('saveVideo');
+    const videoDuration = document.getElementById('videoDuration');
+    const closeMarqueeModal = document.getElementById('closeMarqueeModal');
+    const ctx = marqueePreview.getContext('2d');
+    let animationFrame;
+    let backgroundImg = null;
+
+    if (!marqueeModal || !marqueeText || !useAIText || !marqueeSpeed || !fontColor || !fontFamily || !effectType || !backgroundImage || !marqueePreview || !saveVideo || !videoDuration || !closeMarqueeModal) {
+        console.error('Ошибка: Не найдены элементы модального окна');
+        return;
+    }
+
+    let xPos = marqueePreview.width;
+    const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000'
+        : '';
+
+    function resizeImageToCanvas(img, canvasWidth, canvasHeight) {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvasWidth;
+        tempCanvas.height = canvasHeight;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+        return tempCanvas;
+    }
+
+    backgroundImage.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                backgroundImg = new Image();
+                backgroundImg.src = event.target.result;
+                backgroundImg.onload = () => {
+                    backgroundImg = resizeImageToCanvas(backgroundImg, 5120, 1080);
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    useAIText.addEventListener('click', async () => {
+        try {
+            const response = await fetch(`${baseUrl}/api/openai`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        { role: 'system', content: 'Сгенерируй короткий (до 50 символов) призыв к действию для подписки на тему (например, "Подпишись на космос!").' },
+                        { role: 'user', content: 'Призыв к подписке' }
+                    ],
+                    max_tokens: 50,
+                    temperature: 0.8
+                })
+            });
+            if (!response.ok) throw new Error(`HTTP ошибка: ${response.status}`);
+            const data = await response.json();
+            if (data.choices && data.choices[0]) {
+                marqueeText.value = data.choices[0].message.content;
+            }
+        } catch (error) {
+            console.error('Ошибка получения текста AI:', error);
+            marqueeText.value = 'Ошибка при загрузке текста AI';
+        }
+    });
+
+    function applyEffect(ctx, text, x, y, effect, time) {
+        ctx.save();
+        switch (effect) {
+            case 'glow':
+                ctx.shadowColor = fontColor.value;
+                ctx.shadowBlur = 10;
+                break;
+            case 'pulse':
+                const scale = 1 + Math.sin(time * 0.005) * 0.1;
+                ctx.scale(scale, scale);
+                break;
+            case 'bounce':
+                y += Math.sin(time * 0.01) * 20;
+                break;
+            case 'fade':
+                ctx.globalAlpha = 0.5 + Math.sin(time * 0.005) * 0.5;
+                break;
+            case 'rotate':
+                ctx.translate(x, y);
+                ctx.rotate(Math.sin(time * 0.005) * 0.2);
+                ctx.translate(-x, -y);
+                break;
+            case 'wave':
+                y += Math.sin(x * 0.01 + time * 0.005) * 20;
+                break;
+            case 'blink':
+                ctx.globalAlpha = Math.abs(Math.sin(time * 0.01));
+                break;
+            case 'scale':
+                ctx.scale(1 + Math.sin(time * 0.005) * 0.2, 1);
+                break;
+            case 'skew':
+                ctx.transform(1, Math.sin(time * 0.005) * 0.2, 0, 1, 0, 0);
+                break;
+            case 'jitter':
+                x += (Math.random() - 0.5) * 10;
+                y += (Math.random() - 0.5) * 10;
+                break;
+        }
+        ctx.fillText(text, x, y);
+        ctx.restore();
+    }
+
+    function animateMarquee() {
+        ctx.clearRect(0, 0, marqueePreview.width, marqueePreview.height);
+        if (backgroundImg) {
+            ctx.drawImage(backgroundImg, 0, 0);
+        } else {
+            generateUniqueBackground(ctx, marqueePreview.width, marqueePreview.height);
+        }
+        ctx.font = `bold 80px "${fontFamily.value}"`;
+        ctx.fillStyle = fontColor.value;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        xPos -= parseInt(marqueeSpeed.value);
+        if (xPos < -ctx.measureText(marqueeText.value).width) {
+            xPos = marqueePreview.width;
+        }
+        applyEffect(ctx, marqueeText.value, xPos, marqueePreview.height / 2, effectType.value, performance.now());
+        animationFrame = requestAnimationFrame(animateMarquee);
+    }
+
+    function generateUniqueBackground(ctx, width, height) {
+        const gradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width / 2);
+        gradient.addColorStop(0, '#1a0000');
+        gradient.addColorStop(1, '#000000');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+
+        const waveCount = Math.floor(Math.random() * 3 + 3);
+        for (let i = 0; i < waveCount; i++) {
+            const gradient = ctx.createRadialGradient(
+                Math.random() * width,
+                Math.random() * height,
+                0,
+                Math.random() * width,
+                Math.random() * height,
+                Math.random() * 50 + 30
+            );
+            gradient.addColorStop(0, `rgba(255, 0, 0, ${Math.random() * 0.2 + 0.1})`);
+            gradient.addColorStop(1, `rgba(139, 0, 0, 0)`);
+            ctx.beginPath();
+            ctx.arc(
+                Math.random() * width,
+                Math.random() * height,
+                Math.random() * 50 + 30,
+                0, Math.PI * 2
+            );
+            ctx.fillStyle = gradient;
+            ctx.fill();
+        }
+    }
+
+    [marqueeText, marqueeSpeed, fontColor, fontFamily, effectType].forEach(input => {
+        input.addEventListener('input', () => {
+            xPos = marqueePreview.width;
+            if (!animationFrame) animateMarquee();
+        });
+    });
+
+    closeMarqueeModal.addEventListener('click', () => {
+        marqueeModal.style.display = 'none';
+        cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+    });
+
+    saveVideo.addEventListener('click', async () => {
+        const duration = parseInt(videoDuration.value);
+        const fps = 30;
+        const frames = duration * fps;
+        const frameData = [];
+
+        for (let i = 0; i < frames; i++) {
+            ctx.clearRect(0, 0, marqueePreview.width, marqueePreview.height);
+            if (backgroundImg) {
+                ctx.drawImage(backgroundImg, 0, 0);
+            } else {
+                generateUniqueBackground(ctx, marqueePreview.width, marqueePreview.height);
+            }
+            ctx.font = `bold 80px "${fontFamily.value}"`;
+            ctx.fillStyle = fontColor.value;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            const frameX = marqueePreview.width - (i * parseInt(marqueeSpeed.value) % (marqueePreview.width + ctx.measureText(marqueeText.value).width));
+            applyEffect(ctx, marqueeText.value, frameX, marqueePreview.height / 2, effectType.value, i * 1000 / fps);
+            frameData.push(marqueePreview.toDataURL('image/png'));
+        }
+
+        const { createFFmpeg, fetchFile } = FFmpeg;
+        const ffmpeg = createFFmpeg({ log: true });
+        await ffmpeg.load();
+        for (let i = 0; i < frameData.length; i++) {
+            ffmpeg.FS('writeFile', `frame${i}.png`, await fetchFile(frameData[i]));
+        }
+        await ffmpeg.run('-framerate', '30', '-i', 'frame%d.png', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', 'output.mp4');
+        const data = ffmpeg.FS('readFile', 'output.mp4');
+        const blob = new Blob([data.buffer], { type: 'video/mp4' });
+        saveAs(blob, `marquee_${duration}s.mp4`);
+        ffmpeg.FS('unlink', 'output.mp4');
+        for (let i = 0; i < frameData.length; i++) {
+            ffmpeg.FS('unlink', `frame${i}.png`);
+        }
+    });
+
+    animateMarquee();
+});

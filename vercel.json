@@ -18,6 +18,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "lib/**/*",
+      "use": "@vercel/static"
+    },
+    {
       "src": "favicon.ico",
       "use": "@vercel/static"
     }
@@ -30,6 +34,10 @@
     {
       "src": "/api/openai",
       "dest": "/api/openai.js"
+    },
+    {
+      "src": "/lib/(.*)",
+      "dest": "/lib/$1"
     },
     {
       "src": "/(.*)",

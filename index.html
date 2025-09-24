@@ -7,13 +7,13 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/cosmic.css">
-    <link href="https://fonts.googleapis.com/css2?family=Arial+Black&family=Roboto&family=Impact&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Arial+Black&family=Roboto&family=Impact&family=Open+Sans&family=Lora&family=Montserrat&family=Poppins&family=Raleway&family=Bebas+Neue&family=Source+Sans+Pro&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="alien-background"></div>
     <main class="mainframe">
         <div class="marquee-button">
-            <button class="alien-button" id="marqueeButton">
+            <button class="alien-button alien-button-large" id="marqueeButton">
                 <i class="fas fa-running"></i> Бегущая строка
             </button>
         </div>
@@ -56,53 +56,76 @@
         <div class="modal-content">
             <h2>Генератор бегущей строки (5120x1080)</h2>
             <div class="marquee-controls">
-                <label for="marqueeText">Текст:</label>
-                <textarea id="marqueeText" class="alien-textarea" placeholder="Введите текст или используйте AI"></textarea>
-                <button class="alien-button" id="useAIText">Использовать текст AI</button>
-                <label for="marqueeSpeed">Скорость (пиксели/кадр):</label>
-                <input type="range" id="marqueeSpeed" min="1" max="20" value="5">
-                <label for="fontColor">Цвет шрифта:</label>
-                <input type="color" id="fontColor" value="#ff0000">
-                <label for="fontFamily">Шрифт:</label>
-                <select id="fontFamily" class="alien-select">
-                    <option value="Arial Black">Arial Black</option>
-                    <option value="Roboto">Roboto</option>
-                    <option value="Impact">Impact</option>
-                </select>
-                <label for="effectType">Эффект:</label>
-                <select id="effectType" class="alien-select">
-                    <option value="none">Без эффекта</option>
-                    <option value="glow">Свечение</option>
-                    <option value="pulse">Пульсация</option>
-                    <option value="bounce">Прыжки</option>
-                    <option value="fade">Затухание</option>
-                    <option value="rotate">Вращение</option>
-                    <option value="wave">Волна</option>
-                    <option value="blink">Мигание</option>
-                    <option value="scale">Масштабирование</option>
-                    <option value="skew">Наклон</option>
-                    <option value="jitter">Дрожание</option>
-                </select>
-                <label for="backgroundImage">Фон:</label>
-                <input type="file" id="backgroundImage" accept="image/*">
-                <canvas id="marqueePreview" width="5120" height="1080" style="width: 100%; height: auto;"></canvas>
-                <div class="video-duration">
-                    <label>Длительность видео:</label>
-                    <select id="videoDuration" class="alien-select">
-                        <option value="10">10 секунд</option>
-                        <option value="20">20 секунд</option>
-                        <option value="40">40 секунд</option>
-                        <option value="60">60 секунд</option>
-                    </select>
-                    <button class="alien-button" id="saveVideo">Сохранить видео</button>
+                <div class="control-group">
+                    <h3>Текст</h3>
+                    <textarea id="marqueeText" class="alien-textarea" placeholder="Введите текст (до 50 символов)"></textarea>
+                    <button class="alien-button" id="useAIText">Текст от AI</button>
                 </div>
+                <div class="control-group">
+                    <h3>Стиль</h3>
+                    <label for="fontFamily">Шрифт:</label>
+                    <select id="fontFamily" class="alien-select">
+                        <option value="Arial Black">Arial Black</option>
+                        <option value="Roboto">Roboto</option>
+                        <option value="Impact">Impact</option>
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Lora">Lora</option>
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Poppins">Poppins</option>
+                        <option value="Raleway">Raleway</option>
+                        <option value="Bebas Neue">Bebas Neue</option>
+                        <option value="Source Sans Pro">Source Sans Pro</option>
+                    </select>
+                    <label for="fontSize">Размер шрифта (px):</label>
+                    <input type="range" id="fontSize" min="40" max="120" value="80">
+                    <label for="fontColor">Цвет шрифта:</label>
+                    <input type="color" id="fontColor" value="#ff0000">
+                </div>
+                <div class="control-group">
+                    <h3>Анимация</h3>
+                    <label for="marqueeSpeed">Скорость (пиксели/кадр):</label>
+                    <input type="range" id="marqueeSpeed" min="1" max="20" value="5">
+                    <label for="effectType">Эффект:</label>
+                    <select id="effectType" class="alien-select">
+                        <option value="none">Без эффекта</option>
+                        <option value="glow">Свечение</option>
+                        <option value="pulse">Пульсация</option>
+                        <option value="bounce">Прыжки</option>
+                        <option value="fade">Затухание</option>
+                        <option value="rotate">Вращение</option>
+                        <option value="wave">Волна</option>
+                        <option value="blink">Мигание</option>
+                        <option value="scale">Масштабирование</option>
+                        <option value="skew">Наклон</option>
+                    </div>
+                    <div class="control-group">
+                        <h3>Фон</h3>
+                        <label for="backgroundImage">Загрузить фон:</label>
+                        <input type="file" id="backgroundImage" accept="image/*">
+                    </div>
+                    <div class="preview-group">
+                        <h3>Предпросмотр</h3>
+                        <canvas id="marqueePreview" width="5120" height="1080" style="width: 100%; height: auto;"></canvas>
+                    </div>
+                    <div class="control-group">
+                        <h3>Экспорт</h3>
+                        <label for="videoDuration">Длительность видео:</label>
+                        <select id="videoDuration" class="alien-select">
+                            <option value="10">10 секунд</option>
+                            <option value="20">20 секунд</option>
+                            <option value="40">40 секунд</option>
+                            <option value="60">60 секунд</option>
+                        </select>
+                        <button class="alien-button" id="saveVideo">Сохранить видео</button>
+                    </div>
+                </div>
+                <button class="alien-button modal-close" id="closeMarqueeModal">Закрыть</button>
             </div>
-            <button class="alien-button modal-close" id="closeMarqueeModal">Закрыть</button>
         </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+    <script src="/lib/ffmpeg.min.js"></script>
     <script src="/js/cosmic.js"></script>
     <script src="/js/marquee.js"></script>
 </body>

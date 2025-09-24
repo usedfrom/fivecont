@@ -12,55 +12,110 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveVideo = document.getElementById('saveVideo');
     const videoDuration = document.getElementById('videoDuration');
     const closeMarqueeModal = document.getElementById('closeMarqueeModal');
+    const progressBar = document.getElementById('progressBar');
+    const progress = document.getElementById('progress');
 
-    if (!marqueeModal || !marqueeText || !useAIText || !marqueeSpeed || !fontColor || !fontFamily || !fontSize || !effectType || !backgroundImage || !marqueePreview || !saveVideo || !videoDuration || !closeMarqueeModal) {
+    if (!marqueeModal || !marqueeText || !useAIText || !marqueeSpeed || !fontColor || !fontFamily || !fontSize || !effectType || !backgroundImage || !marqueePreview || !saveVideo || !videoDuration || !closeMarqueeModal || !progressBar || !progress) {
         console.error('Ошибка: Не найдены элементы модального окна');
         return;
     }
 
-    const ctx = marqueePreview.getContext('2d');
-    let xPos = marqueePreview.width;
-    let backgroundImg = null;
+    const width = 5120;
+    const height = 1080;
+    let xPos = width;
+    let backgroundSprite = null;
+    let textSprite = null;
     let animationFrame = null;
+
+    // Инициализация PixiJS
+    const app = new PIXI.Application({
+        view: marqueePreview,
+        width: width,
+        height: height,
+        backgroundColor: 0x000000,
+        resolution: window.devicePixelRatio || 1,
+        autoDensity: true
+    });
+
+    // Создание контейнера для эффектов
+    const container = new PIXI.Container();
+    app.stage.addChild(container);
+
+    // Дефолтный фон
+    function generateUniqueBackground() {
+        const graphics = new PIXI.Graphics();
+        const gradient = new PIXI.FillGradient(0, 0, width, height);
+        gradient.addColorStop(0, 0x1a0000);
+        gradient.addColorStop(1, 0x000000);
+        graphics.beginFill(gradient);
+        graphics.drawRect(0, 0, width, height);
+        graphics.endFill();
+
+        for (let i = 0; i < 3; i++) {
+            const circle = new PIXI.Graphics();
+            const cx = Math.random() * width;
+            const cy = Math.random() * height;
+            const radius = 50;
+            const circleGradient = new PIXI.FillGradient(cx, cy, cx, cy);
+            circleGradient.addColorStop(0, 0xff0000, 0.2);
+            circleGradient.addColorStop(1, 0x8b0000, 0);
+            circle.beginFill(circleGradient);
+            circle.drawCircle(cx, cy, radius);
+            circle.endFill();
+            graphics.addChild(circle);
+        }
+
+        const texture = app.renderer.generateTexture(graphics);
+        const sprite = new PIXI.Sprite(texture);
+        sprite.width = width;
+        sprite.height = height;
+        return sprite;
+    }
+
+    // Инициализация фона
+    backgroundSprite = generateUniqueBackground();
+    container.addChild(backgroundSprite);
+
+    // Инициализация текста
+    textSprite = new PIXI.Text('Подпишись!', {
+        fontFamily: fontFamily.value,
+        fontSize: parseInt(fontSize.value),
+        fill: fontColor.value,
+        align: 'left'
+    });
+    textSprite.x = xPos;
+    textSprite.y = height / 2;
+    textSprite.anchor.set(0, 0.5);
+    container.addChild(textSprite);
 
     const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:3000'
         : '';
 
-    function resizeImageToCanvas(img, canvasWidth, canvasHeight) {
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvasWidth;
-        tempCanvas.height = canvasHeight;
-        const tempCtx = tempCanvas.getContext('2d');
-        const imgRatio = img.width / img.height;
-        const canvasRatio = canvasWidth / canvasHeight;
-        let drawWidth, drawHeight, offsetX, offsetY;
-
-        if (imgRatio > canvasRatio) {
-            drawHeight = canvasHeight;
-            drawWidth = canvasHeight * imgRatio;
-            offsetX = (canvasWidth - drawWidth) / 2;
-            offsetY = 0;
-        } else {
-            drawWidth = canvasWidth;
-            drawHeight = canvasWidth / imgRatio;
-            offsetX = 0;
-            offsetY = (canvasHeight - drawHeight) / 2;
-        }
-
-        tempCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-        return tempCanvas;
-    }
-
+    // Загрузка пользовательского фона
     backgroundImage.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                backgroundImg = new Image();
-                backgroundImg.src = event.target.result;
-                backgroundImg.onload = () => {
-                    backgroundImg = resizeImageToCanvas(backgroundImg, 5120, 1080);
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const texture = PIXI.Texture.from(img);
+                    backgroundSprite.texture = texture;
+                    backgroundSprite.width = width;
+                    backgroundSprite.height = height;
+                    const imgRatio = img.width / img.height;
+                    const canvasRatio = width / height;
+                    if (imgRatio > canvasRatio) {
+                        backgroundSprite.height = height;
+                        backgroundSprite.width = height * imgRatio;
+                        backgroundSprite.x = (width - backgroundSprite.width) / 2;
+                    } else {
+                        backgroundSprite.width = width;
+                        backgroundSprite.height = width / imgRatio;
+                        backgroundSprite.y = (height - backgroundSprite.height) / 2;
+                    }
                     if (!animationFrame) animateMarquee();
                 };
             };
@@ -68,6 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Генерация текста от AI
     useAIText.addEventListener('click', async () => {
         try {
             const response = await fetch(`${baseUrl}/api/openai`, {
@@ -87,128 +143,102 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             if (data.choices && data.choices[0]) {
                 marqueeText.value = data.choices[0].message.content.slice(0, 50);
-                xPos = marqueePreview.width;
+                updateText();
+                xPos = width;
                 if (!animationFrame) animateMarquee();
             }
         } catch (error) {
             console.error('Ошибка получения текста AI:', error);
             marqueeText.value = 'Ошибка при загрузке текста AI';
+            updateText();
         }
     });
 
+    // Ограничение текста до 50 символов
     marqueeText.addEventListener('input', () => {
         if (marqueeText.value.length > 50) {
             marqueeText.value = marqueeText.value.slice(0, 50);
         }
-        xPos = marqueePreview.width;
+        updateText();
+        xPos = width;
         if (!animationFrame) animateMarquee();
     });
 
-    function generateUniqueBackground(ctx, width, height) {
-        const gradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width / 2);
-        gradient.addColorStop(0, '#1a0000');
-        gradient.addColorStop(1, '#000000');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, width, height);
-
-        const waveCount = 3;
-        for (let i = 0; i < waveCount; i++) {
-            const gradient = ctx.createRadialGradient(
-                Math.random() * width,
-                Math.random() * height,
-                0,
-                Math.random() * width,
-                Math.random() * height,
-                50
-            );
-            gradient.addColorStop(0, `rgba(255, 0, 0, 0.2)`);
-            gradient.addColorStop(1, `rgba(139, 0, 0, 0)`);
-            ctx.beginPath();
-            ctx.arc(Math.random() * width, Math.random() * height, 50, 0, Math.PI * 2);
-            ctx.fillStyle = gradient;
-            ctx.fill();
-        }
+    // Обновление текста
+    function updateText() {
+        textSprite.text = marqueeText.value || 'Подпишись!';
+        textSprite.style.fontFamily = fontFamily.value;
+        textSprite.style.fontSize = parseInt(fontSize.value);
+        textSprite.style.fill = fontColor.value;
     }
 
-    function applyEffect(ctx, text, x, y, effect, time) {
-        ctx.save();
-        ctx.font = `bold ${fontSize.value}px "${fontFamily.value}"`;
-        ctx.fillStyle = fontColor.value;
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-
-        switch (effect) {
+    // Применение эффектов
+    function applyEffect(time) {
+        textSprite.filters = [];
+        switch (effectType.value) {
             case 'glow':
-                ctx.shadowColor = fontColor.value;
-                ctx.shadowBlur = 10;
+                textSprite.filters = [new PIXI.filters.GlowFilter({ color: parseInt(fontColor.value.slice(1), 16), distance: 10 })];
                 break;
             case 'pulse':
-                const scale = 1 + Math.sin(time * 0.005) * 0.1;
-                ctx.translate(x, y);
-                ctx.scale(scale, scale);
-                ctx.translate(-x, -y);
+                textSprite.scale.set(1 + Math.sin(time * 0.005) * 0.1);
                 break;
             case 'bounce':
-                y += Math.sin(time * 0.01) * 20;
+                textSprite.y = height / 2 + Math.sin(time * 0.01) * 20;
                 break;
             case 'fade':
-                ctx.globalAlpha = 0.5 + Math.sin(time * 0.005) * 0.5;
+                textSprite.alpha = 0.5 + Math.sin(time * 0.005) * 0.5;
                 break;
             case 'rotate':
-                ctx.translate(x, y);
-                ctx.rotate(Math.sin(time * 0.005) * 0.2);
-                ctx.translate(-x, -y);
+                textSprite.rotation = Math.sin(time * 0.005) * 0.2;
                 break;
             case 'wave':
-                y += Math.sin(x * 0.01 + time * 0.005) * 20;
+                textSprite.y = height / 2 + Math.sin(textSprite.x * 0.01 + time * 0.005) * 20;
                 break;
             case 'blink':
-                ctx.globalAlpha = Math.abs(Math.sin(time * 0.01));
+                textSprite.alpha = Math.abs(Math.sin(time * 0.01));
                 break;
             case 'scale':
-                ctx.translate(x, y);
-                ctx.scale(1 + Math.sin(time * 0.005) * 0.2, 1);
-                ctx.translate(-x, -y);
+                textSprite.scale.set(1 + Math.sin(time * 0.005) * 0.2, 1);
                 break;
             case 'skew':
-                ctx.transform(1, Math.sin(time * 0.005) * 0.2, 0, 1, 0, 0);
+                textSprite.skew.set(Math.sin(time * 0.005) * 0.2, 0);
                 break;
         }
-        ctx.fillText(text, x, y);
-        ctx.restore();
     }
 
+    // Анимация бегущей строки
     function animateMarquee() {
-        ctx.clearRect(0, 0, marqueePreview.width, marqueePreview.height);
-        if (backgroundImg) {
-            ctx.drawImage(backgroundImg, 0, 0);
-        } else {
-            generateUniqueBackground(ctx, marqueePreview.width, marqueePreview.height);
-        }
         xPos -= parseInt(marqueeSpeed.value);
-        if (xPos < -ctx.measureText(marqueeText.value || 'Подпишись!').width) {
-            xPos = marqueePreview.width;
+        if (xPos < -textSprite.width) {
+            xPos = width;
         }
-        applyEffect(ctx, marqueeText.value || 'Подпишись!', xPos, marqueePreview.height / 2, effectType.value, performance.now());
+        textSprite.x = xPos;
+        applyEffect(performance.now());
         animationFrame = requestAnimationFrame(animateMarquee);
     }
 
+    // Обработчики изменений настроек
     [marqueeSpeed, fontColor, fontFamily, fontSize, effectType].forEach(input => {
         input.addEventListener('input', () => {
-            xPos = marqueePreview.width;
+            updateText();
+            xPos = width;
             if (!animationFrame) animateMarquee();
         });
     });
 
+    // Закрытие модального окна
     closeMarqueeModal.addEventListener('click', () => {
         marqueeModal.style.display = 'none';
         cancelAnimationFrame(animationFrame);
         animationFrame = null;
     });
 
+    // Экспорт видео
     saveVideo.addEventListener('click', async () => {
         saveVideo.disabled = true;
         saveVideo.textContent = 'Генерация...';
+        progressBar.style.display = 'block';
+        progress.style.width = '0%';
         try {
             const duration = parseInt(videoDuration.value);
             const fps = 30;
@@ -216,15 +246,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const frameData = [];
 
             for (let i = 0; i < frames; i++) {
-                ctx.clearRect(0, 0, marqueePreview.width, marqueePreview.height);
-                if (backgroundImg) {
-                    ctx.drawImage(backgroundImg, 0, 0);
-                } else {
-                    generateUniqueBackground(ctx, marqueePreview.width, marqueePreview.height);
-                }
-                const frameX = marqueePreview.width - (i * parseInt(marqueeSpeed.value) % (marqueePreview.width + ctx.measureText(marqueeText.value || 'Подпишись!').width));
-                applyEffect(ctx, marqueeText.value || 'Подпишись!', frameX, marqueePreview.height / 2, effectType.value, i * 1000 / fps);
-                frameData.push(marqueePreview.toDataURL('image/png'));
+                xPos = width - (i * parseInt(marqueeSpeed.value) % (width + textSprite.width));
+                textSprite.x = xPos;
+                applyEffect(i * 1000 / fps);
+                frameData.push(app.renderer.extract.canvas(app.stage).toDataURL('image/png'));
+                progress.style.width = `${(i + 1) / frames * 100}%`;
             }
 
             const { createFFmpeg, fetchFile } = window.FFmpeg;
@@ -241,17 +267,19 @@ document.addEventListener('DOMContentLoaded', function() {
             await ffmpeg.run('-framerate', '30', '-i', 'frame%d.png', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-r', '30', 'output.mp4');
             const data = ffmpeg.FS('readFile', 'output.mp4');
             const blob = new Blob([data.buffer], { type: 'video/mp4' });
-            saveAs(blob, `marquee_${duration}s.mp4`);
+            const sanitizedText = (marqueeText.value || 'Подпишись').replace(/[^a-zA-Z0-9а-яА-Я]/g, '_').slice(0, 20);
+            saveAs(blob, `marquee_${sanitizedText}_${duration}s.mp4`);
             ffmpeg.FS('unlink', 'output.mp4');
             for (let i = 0; i < frameData.length; i++) {
                 ffmpeg.FS('unlink', `frame${i}.png`);
             }
         } catch (error) {
             console.error('Ошибка генерации видео:', error);
-            alert('Ошибка при генерации видео. Попробуйте снова.');
+            alert('Ошибка при генерации видео. Проверьте консоль и попробуйте снова.');
         } finally {
             saveVideo.disabled = false;
-            saveVideo.textContent = 'Сохранить видео';
+            saveVideo.textContent = 'Скачать видео';
+            progressBar.style.display = 'none';
         }
     });
 

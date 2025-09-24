@@ -105,8 +105,8 @@ body {
 }
 
 .alien-button {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -127,7 +127,7 @@ body {
     height: 80px;
 }
 
-#downloadAllButton, #downloadNoZipButton {
+#downloadAllButton, #downloadNoZipButton, #saveVideo, #useAIText {
     width: auto;
     padding: 0.5rem 1rem;
     border-radius: 20px;
@@ -218,9 +218,9 @@ body {
     background: rgba(0, 0, 0, 0.8);
     border: 2px solid var(--alien-red);
     border-radius: 10px;
-    padding: 1rem;
+    padding: 1.5rem;
     width: 90%;
-    max-width: 800px;
+    max-width: 1000px;
     max-height: 90vh;
     overflow-y: auto;
 }
@@ -228,18 +228,33 @@ body {
 .modal-content h2 {
     color: var(--alien-white);
     text-align: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+}
+
+.modal-content h3 {
+    color: var(--alien-red);
+    margin-bottom: 0.5rem;
+    font-size: 1.4rem;
 }
 
 .marquee-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
 }
 
-.marquee-controls label {
-    color: var(--alien-white);
-    font-size: 1.2rem;
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.preview-group {
+    grid-column: span 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .alien-textarea {
@@ -253,6 +268,8 @@ body {
     font-size: 1.2rem;
     outline: none;
     transition: all 0.3s;
+    resize: vertical;
+    min-height: 80px;
 }
 
 .alien-textarea:focus {
@@ -262,7 +279,7 @@ body {
 
 #marqueePreview {
     width: 100%;
-    height: auto;
+    max-height: 300px;
     border: 1px solid var(--alien-red);
     border-radius: 10px;
     margin-top: 1rem;
@@ -279,7 +296,8 @@ body {
     width: auto;
     padding: 0.5rem 1rem;
     border-radius: 20px;
-    margin-top: 1rem;
+    margin: 1.5rem auto 0;
+    display: block;
 }
 
 @media (max-width: 768px) {
@@ -297,14 +315,14 @@ body {
         font-size: 1rem;
     }
     .alien-button {
-        width: 32px;
-        height: 32px;
+        width: 40px;
+        height: 40px;
     }
     .alien-button-large {
         width: 64px;
         height: 64px;
     }
-    #downloadAllButton, #downloadNoZipButton {
+    #downloadAllButton, #downloadNoZipButton, #saveVideo, #useAIText {
         font-size: 0.9rem;
         padding: 0.4rem 0.8rem;
     }
@@ -324,9 +342,19 @@ body {
     }
     .modal-content {
         width: 95%;
+        padding: 1rem;
     }
-    .marquee-controls label {
-        font-size: 1rem;
+    .modal-content h2 {
+        font-size: 1.5rem;
+    }
+    .modal-content h3 {
+        font-size: 1.2rem;
+    }
+    .marquee-controls {
+        grid-template-columns: 1fr;
+    }
+    .preview-group {
+        grid-column: span 1;
     }
     .alien-textarea {
         font-size: 1rem;

@@ -7,14 +7,25 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/cosmic.css">
-    <link href="https://fonts.googleapis.com/css2?family=Arial+Black&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Arial+Black&family=Roboto&family=Impact&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="alien-background"></div>
     <main class="mainframe">
+        <div class="marquee-button">
+            <button class="alien-button" id="marqueeButton">
+                <i class="fas fa-running"></i> Бегущая строка
+            </button>
+        </div>
         <div class="chat-body" id="chatBody"></div>
         <div class="image-carousel" id="imageOutput"></div>
         <div class="download-all">
+            <select id="downloadSize" class="alien-select">
+                <option value="1x1">1x1 (540x540)</option>
+                <option value="9x16">9x16 (576x1024)</option>
+                <option value="5120x1080">5120x1080</option>
+                <option value="desktop">Десктоп (1920x1080)</option>
+            </select>
             <button class="alien-button" id="downloadAllButton" style="display: none;">
                 <i class="fas fa-download"></i> Скачать все (ZIP)
             </button>
@@ -41,8 +52,58 @@
             </div>
         </div>
     </main>
+    <div class="modal" id="marqueeModal" style="display: none;">
+        <div class="modal-content">
+            <h2>Настройка бегущей строки (5120x1080)</h2>
+            <div class="marquee-controls">
+                <label for="marqueeText">Текст:</label>
+                <textarea id="marqueeText" class="alien-textarea" placeholder="Введите текст или используйте AI"></textarea>
+                <button class="alien-button" id="useAIText">Использовать текст AI</button>
+                <label for="marqueeSpeed">Скорость (пиксели/кадр):</label>
+                <input type="range" id="marqueeSpeed" min="1" max="20" value="5">
+                <label for="fontColor">Цвет шрифта:</label>
+                <input type="color" id="fontColor" value="#ff0000">
+                <label for="fontFamily">Шрифт:</label>
+                <select id="fontFamily" class="alien-select">
+                    <option value="Arial Black">Arial Black</option>
+                    <option value="Roboto">Roboto</option>
+                    <option value="Impact">Impact</option>
+                </select>
+                <label for="effectType">Эффект:</label>
+                <select id="effectType" class="alien-select">
+                    <option value="none">Без эффекта</option>
+                    <option value="glow">Свечение</option>
+                    <option value="pulse">Пульсация</option>
+                    <option value="bounce">Прыжки</option>
+                    <option value="fade">Затухание</option>
+                    <option value="rotate">Вращение</option>
+                    <option value="wave">Волна</option>
+                    <option value="blink">Мигание</option>
+                    <option value="scale">Масштабирование</option>
+                    <option value="skew">Наклон</option>
+                    <option value="jitter">Дрожание</option>
+                </select>
+                <label for="backgroundImage">Фон:</label>
+                <input type="file" id="backgroundImage" accept="image/*">
+                <canvas id="marqueePreview" width="5120" height="1080"></canvas>
+                <div class="video-duration">
+                    <label>Длительность видео:</label>
+                    <select id="videoDuration" class="alien-select">
+                        <option value="10">10 секунд</option>
+                        <option value="20">20 секунд</option>
+                        <option value="40">40 секунд</option>
+                        <option value="60">60 секунд</option>
+                    </select>
+                    <button class="alien-button" id="saveVideo">Сохранить видео</button>
+                </div>
+            </div>
+            <button class="alien-button modal-close" id="closeMarqueeModal">Закрыть</button>
+        </div>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <script src="/js/cosmic.js"></script>
+    <script src="/js/marquee.js"></script>
 </body>
 </html>

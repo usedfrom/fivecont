@@ -77,7 +77,7 @@
                         <option value="Source Sans Pro">Source Sans Pro</option>
                     </select>
                     <label for="fontSize">Размер шрифта (px):</label>
-                    <input type="range" id="fontSize" min="40" max="120" value="80">
+                    <input type="range" id="fontSize" min="40" max="500" value="80">
                     <label for="fontColor">Цвет шрифта:</label>
                     <input type="color" id="fontColor" value="#ff0000">
                 </div>
@@ -97,34 +97,38 @@
                         <option value="blink">Мигание</option>
                         <option value="scale">Масштабирование</option>
                         <option value="skew">Наклон</option>
-                    </div>
-                    <div class="control-group">
-                        <h3>Фон</h3>
-                        <label for="backgroundImage">Загрузить фон:</label>
-                        <input type="file" id="backgroundImage" accept="image/*">
-                    </div>
-                    <div class="preview-group">
-                        <h3>Предпросмотр</h3>
-                        <canvas id="marqueePreview" width="5120" height="1080" style="width: 100%; height: auto;"></canvas>
-                    </div>
-                    <div class="control-group">
-                        <h3>Экспорт</h3>
-                        <label for="videoDuration">Длительность видео:</label>
-                        <select id="videoDuration" class="alien-select">
-                            <option value="10">10 секунд</option>
-                            <option value="20">20 секунд</option>
-                            <option value="40">40 секунд</option>
-                            <option value="60">60 секунд</option>
-                        </select>
-                        <button class="alien-button" id="saveVideo">Сохранить видео</button>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <h3>Фон</h3>
+                    <label for="backgroundImage">Загрузить фон:</label>
+                    <input type="file" id="backgroundImage" accept="image/*">
+                </div>
+                <div class="preview-group">
+                    <h3>Предпросмотр</h3>
+                    <canvas id="marqueePreview" width="5120" height="1080" style="width: 100%; max-height: 400px;"></canvas>
+                    <div id="progressBar" style="display: none; width: 100%; height: 10px; background: #333; margin-top: 10px;">
+                        <div id="progress" style="width: 0%; height: 100%; background: var(--alien-red);"></div>
                     </div>
                 </div>
-                <button class="alien-button modal-close" id="closeMarqueeModal">Закрыть</button>
+                <div class="control-group">
+                    <h3>Экспорт</h3>
+                    <label for="videoDuration">Длительность видео:</label>
+                    <select id="videoDuration" class="alien-select">
+                        <option value="10">10 секунд</option>
+                        <option value="20">20 секунд</option>
+                        <option value="40">40 секунд</option>
+                        <option value="60">60 секунд</option>
+                    </select>
+                    <button class="alien-button" id="saveVideo">Скачать видео</button>
+                </div>
             </div>
+            <button class="alien-button modal-close" id="closeMarqueeModal">Закрыть</button>
         </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.5.2/pixi.min.js"></script>
     <script src="/lib/ffmpeg.min.js"></script>
     <script src="/js/cosmic.js"></script>
     <script src="/js/marquee.js"></script>

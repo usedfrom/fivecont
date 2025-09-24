@@ -11,16 +11,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveVideo = document.getElementById('saveVideo');
     const videoDuration = document.getElementById('videoDuration');
     const closeMarqueeModal = document.getElementById('closeMarqueeModal');
-    const ctx = marqueePreview.getContext('2d');
-    let animationFrame;
-    let backgroundImg = null;
 
     if (!marqueeModal || !marqueeText || !useAIText || !marqueeSpeed || !fontColor || !fontFamily || !effectType || !backgroundImage || !marqueePreview || !saveVideo || !videoDuration || !closeMarqueeModal) {
         console.error('Ошибка: Не найдены элементы модального окна');
         return;
     }
 
+    const ctx = marqueePreview.getContext('2d');
     let xPos = marqueePreview.width;
+    let backgroundImg = null;
+    let animationFrame = null;
+
     const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:3000'
         : '';
@@ -30,7 +31,23 @@ document.addEventListener('DOMContentLoaded', function() {
         tempCanvas.width = canvasWidth;
         tempCanvas.height = canvasHeight;
         const tempCtx = tempCanvas.getContext('2d');
-        tempCtx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+        const imgRatio = img.width / img.height;
+        const canvasRatio = canvasWidth / canvasHeight;
+        let drawWidth, drawHeight, offsetX, offsetY;
+
+        if (imgRatio > canvasRatio) {
+            drawHeight = canvasHeight;
+            drawWidth = canvasHeight * imgRatio;
+            offsetX = (canvasWidth - drawWidth) / 2;
+            offsetY = 0;
+        } else {
+            drawWidth = canvasWidth;
+            drawHeight = canvasWidth / imgRatio;
+            offsetX = 0;
+            offsetY = (canvasHeight - drawHeight) / 2;
+        }
+
+        tempCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
         return tempCanvas;
     }
 
@@ -43,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 backgroundImg.src = event.target.result;
                 backgroundImg.onload = () => {
                     backgroundImg = resizeImageToCanvas(backgroundImg, 5120, 1080);
+                    if (!animationFrame) animateMarquee();
                 };
             };
             reader.readAsDataURL(file);
@@ -68,6 +86,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             if (data.choices && data.choices[0]) {
                 marqueeText.value = data.choices[0].message.content;
+                xPos = marqueePreview.width;
+                if (!animationFrame) animateMarquee();
             }
         } catch (error) {
             console.error('Ошибка получения текста AI:', error);
@@ -75,8 +95,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    function generateUniqueBackground(ctx, width, height) {
+        const gradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width / 2);
+        gradient.addColorStop(0, '#1a0000');
+        gradient.addColorStop(1, '#000000');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+
+        const waveCount = 3;
+        for (let i = 0; i < waveCount; i++) {
+            const gradient = ctx.createRadialGradient(
+                Math.random() * width,
+                Math.random() * height,
+                0,
+                Math.random() * width,
+                Math.random() * height,
+                50
+            );
+            gradient.addColorStop(0, `rgba(255, 0, 0, 0.2)`);
+            gradient.addColorStop(1, `rgba(139, 0, 0, 0)`);
+            ctx.beginPath();
+            ctx.arc(Math.random() * width, Math.random() * height, 50, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+        }
+    }
+
     function applyEffect(ctx, text, x, y, effect, time) {
         ctx.save();
+        ctx.font = `bold 80px "${fontFamily.value}"`;
+        ctx.fillStyle = fontColor.value;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+
         switch (effect) {
             case 'glow':
                 ctx.shadowColor = fontColor.value;
@@ -84,7 +135,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
             case 'pulse':
                 const scale = 1 + Math.sin(time * 0.005) * 0.1;
+                ctx.translate(x, y);
                 ctx.scale(scale, scale);
+                ctx.translate(-x, -y);
                 break;
             case 'bounce':
                 y += Math.sin(time * 0.01) * 20;
@@ -104,7 +157,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 ctx.globalAlpha = Math.abs(Math.sin(time * 0.01));
                 break;
             case 'scale':
+                ctx.translate(x, y);
                 ctx.scale(1 + Math.sin(time * 0.005) * 0.2, 1);
+                ctx.translate(-x, -y);
                 break;
             case 'skew':
                 ctx.transform(1, Math.sin(time * 0.005) * 0.2, 0, 1, 0, 0);
@@ -125,47 +180,12 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             generateUniqueBackground(ctx, marqueePreview.width, marqueePreview.height);
         }
-        ctx.font = `bold 80px "${fontFamily.value}"`;
-        ctx.fillStyle = fontColor.value;
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
         xPos -= parseInt(marqueeSpeed.value);
-        if (xPos < -ctx.measureText(marqueeText.value).width) {
+        if (xPos < -ctx.measureText(marqueeText.value || 'Подпишись!').width) {
             xPos = marqueePreview.width;
         }
-        applyEffect(ctx, marqueeText.value, xPos, marqueePreview.height / 2, effectType.value, performance.now());
+        applyEffect(ctx, marqueeText.value || 'Подпишись!', xPos, marqueePreview.height / 2, effectType.value, performance.now());
         animationFrame = requestAnimationFrame(animateMarquee);
-    }
-
-    function generateUniqueBackground(ctx, width, height) {
-        const gradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width / 2);
-        gradient.addColorStop(0, '#1a0000');
-        gradient.addColorStop(1, '#000000');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, width, height);
-
-        const waveCount = Math.floor(Math.random() * 3 + 3);
-        for (let i = 0; i < waveCount; i++) {
-            const gradient = ctx.createRadialGradient(
-                Math.random() * width,
-                Math.random() * height,
-                0,
-                Math.random() * width,
-                Math.random() * height,
-                Math.random() * 50 + 30
-            );
-            gradient.addColorStop(0, `rgba(255, 0, 0, ${Math.random() * 0.2 + 0.1})`);
-            gradient.addColorStop(1, `rgba(139, 0, 0, 0)`);
-            ctx.beginPath();
-            ctx.arc(
-                Math.random() * width,
-                Math.random() * height,
-                Math.random() * 50 + 30,
-                0, Math.PI * 2
-            );
-            ctx.fillStyle = gradient;
-            ctx.fill();
-        }
     }
 
     [marqueeText, marqueeSpeed, fontColor, fontFamily, effectType].forEach(input => {
@@ -194,16 +214,12 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 generateUniqueBackground(ctx, marqueePreview.width, marqueePreview.height);
             }
-            ctx.font = `bold 80px "${fontFamily.value}"`;
-            ctx.fillStyle = fontColor.value;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
-            const frameX = marqueePreview.width - (i * parseInt(marqueeSpeed.value) % (marqueePreview.width + ctx.measureText(marqueeText.value).width));
-            applyEffect(ctx, marqueeText.value, frameX, marqueePreview.height / 2, effectType.value, i * 1000 / fps);
+            const frameX = marqueePreview.width - (i * parseInt(marqueeSpeed.value) % (marqueePreview.width + ctx.measureText(marqueeText.value || 'Подпишись!').width));
+            applyEffect(ctx, marqueeText.value || 'Подпишись!', frameX, marqueePreview.height / 2, effectType.value, i * 1000 / fps);
             frameData.push(marqueePreview.toDataURL('image/png'));
         }
 
-        const { createFFmpeg, fetchFile } = FFmpeg;
+        const { createFFmpeg, fetchFile } = window.FFmpeg;
         const ffmpeg = createFFmpeg({ log: true });
         await ffmpeg.load();
         for (let i = 0; i < frameData.length; i++) {
@@ -219,5 +235,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Начальная анимация
     animateMarquee();
 });

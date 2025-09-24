@@ -54,7 +54,7 @@
     </main>
     <div class="modal" id="marqueeModal" style="display: none;">
         <div class="modal-content">
-            <h2>Настройка бегущей строки (5120x1080)</h2>
+            <h2>Генератор бегущей строки (5120x1080)</h2>
             <div class="marquee-controls">
                 <label for="marqueeText">Текст:</label>
                 <textarea id="marqueeText" class="alien-textarea" placeholder="Введите текст или используйте AI"></textarea>
@@ -85,7 +85,7 @@
                 </select>
                 <label for="backgroundImage">Фон:</label>
                 <input type="file" id="backgroundImage" accept="image/*">
-                <canvas id="marqueePreview" width="5120" height="1080"></canvas>
+                <canvas id="marqueePreview" width="5120" height="1080" style="width: 100%; height: auto;"></canvas>
                 <div class="video-duration">
                     <label>Длительность видео:</label>
                     <select id="videoDuration" class="alien-select">

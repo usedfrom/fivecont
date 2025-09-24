@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const marqueeSpeed = document.getElementById('marqueeSpeed');
     const fontColor = document.getElementById('fontColor');
     const fontFamily = document.getElementById('fontFamily');
+    const fontSize = document.getElementById('fontSize');
     const effectType = document.getElementById('effectType');
     const backgroundImage = document.getElementById('backgroundImage');
     const marqueePreview = document.getElementById('marqueePreview');
@@ -12,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const videoDuration = document.getElementById('videoDuration');
     const closeMarqueeModal = document.getElementById('closeMarqueeModal');
 
-    if (!marqueeModal || !marqueeText || !useAIText || !marqueeSpeed || !fontColor || !fontFamily || !effectType || !backgroundImage || !marqueePreview || !saveVideo || !videoDuration || !closeMarqueeModal) {
+    if (!marqueeModal || !marqueeText || !useAIText || !marqueeSpeed || !fontColor || !fontFamily || !fontSize || !effectType || !backgroundImage || !marqueePreview || !saveVideo || !videoDuration || !closeMarqueeModal) {
         console.error('Ошибка: Не найдены элементы модального окна');
         return;
     }
@@ -85,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) throw new Error(`HTTP ошибка: ${response.status}`);
             const data = await response.json();
             if (data.choices && data.choices[0]) {
-                marqueeText.value = data.choices[0].message.content;
+                marqueeText.value = data.choices[0].message.content.slice(0, 50);
                 xPos = marqueePreview.width;
                 if (!animationFrame) animateMarquee();
             }
@@ -93,6 +94,14 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Ошибка получения текста AI:', error);
             marqueeText.value = 'Ошибка при загрузке текста AI';
         }
+    });
+
+    marqueeText.addEventListener('input', () => {
+        if (marqueeText.value.length > 50) {
+            marqueeText.value = marqueeText.value.slice(0, 50);
+        }
+        xPos = marqueePreview.width;
+        if (!animationFrame) animateMarquee();
     });
 
     function generateUniqueBackground(ctx, width, height) {
@@ -123,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function applyEffect(ctx, text, x, y, effect, time) {
         ctx.save();
-        ctx.font = `bold 80px "${fontFamily.value}"`;
+        ctx.font = `bold ${fontSize.value}px "${fontFamily.value}"`;
         ctx.fillStyle = fontColor.value;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
@@ -164,10 +173,6 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'skew':
                 ctx.transform(1, Math.sin(time * 0.005) * 0.2, 0, 1, 0, 0);
                 break;
-            case 'jitter':
-                x += (Math.random() - 0.5) * 10;
-                y += (Math.random() - 0.5) * 10;
-                break;
         }
         ctx.fillText(text, x, y);
         ctx.restore();
@@ -188,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
         animationFrame = requestAnimationFrame(animateMarquee);
     }
 
-    [marqueeText, marqueeSpeed, fontColor, fontFamily, effectType].forEach(input => {
+    [marqueeSpeed, fontColor, fontFamily, fontSize, effectType].forEach(input => {
         input.addEventListener('input', () => {
             xPos = marqueePreview.width;
             if (!animationFrame) animateMarquee();
@@ -202,36 +207,51 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     saveVideo.addEventListener('click', async () => {
-        const duration = parseInt(videoDuration.value);
-        const fps = 30;
-        const frames = duration * fps;
-        const frameData = [];
+        saveVideo.disabled = true;
+        saveVideo.textContent = 'Генерация...';
+        try {
+            const duration = parseInt(videoDuration.value);
+            const fps = 30;
+            const frames = duration * fps;
+            const frameData = [];
 
-        for (let i = 0; i < frames; i++) {
-            ctx.clearRect(0, 0, marqueePreview.width, marqueePreview.height);
-            if (backgroundImg) {
-                ctx.drawImage(backgroundImg, 0, 0);
-            } else {
-                generateUniqueBackground(ctx, marqueePreview.width, marqueePreview.height);
+            for (let i = 0; i < frames; i++) {
+                ctx.clearRect(0, 0, marqueePreview.width, marqueePreview.height);
+                if (backgroundImg) {
+                    ctx.drawImage(backgroundImg, 0, 0);
+                } else {
+                    generateUniqueBackground(ctx, marqueePreview.width, marqueePreview.height);
+                }
+                const frameX = marqueePreview.width - (i * parseInt(marqueeSpeed.value) % (marqueePreview.width + ctx.measureText(marqueeText.value || 'Подпишись!').width));
+                applyEffect(ctx, marqueeText.value || 'Подпишись!', frameX, marqueePreview.height / 2, effectType.value, i * 1000 / fps);
+                frameData.push(marqueePreview.toDataURL('image/png'));
             }
-            const frameX = marqueePreview.width - (i * parseInt(marqueeSpeed.value) % (marqueePreview.width + ctx.measureText(marqueeText.value || 'Подпишись!').width));
-            applyEffect(ctx, marqueeText.value || 'Подпишись!', frameX, marqueePreview.height / 2, effectType.value, i * 1000 / fps);
-            frameData.push(marqueePreview.toDataURL('image/png'));
-        }
 
-        const { createFFmpeg, fetchFile } = window.FFmpeg;
-        const ffmpeg = createFFmpeg({ log: true });
-        await ffmpeg.load();
-        for (let i = 0; i < frameData.length; i++) {
-            ffmpeg.FS('writeFile', `frame${i}.png`, await fetchFile(frameData[i]));
-        }
-        await ffmpeg.run('-framerate', '30', '-i', 'frame%d.png', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', 'output.mp4');
-        const data = ffmpeg.FS('readFile', 'output.mp4');
-        const blob = new Blob([data.buffer], { type: 'video/mp4' });
-        saveAs(blob, `marquee_${duration}s.mp4`);
-        ffmpeg.FS('unlink', 'output.mp4');
-        for (let i = 0; i < frameData.length; i++) {
-            ffmpeg.FS('unlink', `frame${i}.png`);
+            const { createFFmpeg, fetchFile } = window.FFmpeg;
+            const ffmpeg = createFFmpeg({
+                log: true,
+                corePath: '/lib/ffmpeg-core.js',
+                workerPath: '/lib/ffmpeg-core.worker.js',
+                wasmPath: '/lib/ffmpeg-core.wasm'
+            });
+            await ffmpeg.load();
+            for (let i = 0; i < frameData.length; i++) {
+                ffmpeg.FS('writeFile', `frame${i}.png`, await fetchFile(frameData[i]));
+            }
+            await ffmpeg.run('-framerate', '30', '-i', 'frame%d.png', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-r', '30', 'output.mp4');
+            const data = ffmpeg.FS('readFile', 'output.mp4');
+            const blob = new Blob([data.buffer], { type: 'video/mp4' });
+            saveAs(blob, `marquee_${duration}s.mp4`);
+            ffmpeg.FS('unlink', 'output.mp4');
+            for (let i = 0; i < frameData.length; i++) {
+                ffmpeg.FS('unlink', `frame${i}.png`);
+            }
+        } catch (error) {
+            console.error('Ошибка генерации видео:', error);
+            alert('Ошибка при генерации видео. Попробуйте снова.');
+        } finally {
+            saveVideo.disabled = false;
+            saveVideo.textContent = 'Сохранить видео';
         }
     });
 

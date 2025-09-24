@@ -20,9 +20,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let chatHistory = [];
     let imageUrls = [];
-    let originalImages = []; // Для хранения оригинальных данных изображений
+    let originalImages = [];
 
-    // Анимация внеземного фона
+    // Анимация фона
     const alienBackground = document.querySelector('.alien-background');
     if (!alienBackground) {
         console.error('Ошибка: Не найден .alien-background');
@@ -36,8 +36,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const energyWaves = [];
     const waveCount = 6;
-    const alienColors = ['#ff0000', '#8b0000'];
-
     for (let i = 0; i < waveCount; i++) {
         energyWaves.push({
             x: Math.random() * canvas.width,
@@ -72,15 +70,9 @@ document.addEventListener('DOMContentLoaded', function() {
     animateAlien();
 
     // Обработка ввода
-    textButton.addEventListener('click', () => {
-        console.log('Клик по кнопке отправки');
-        sendMessage();
-    });
+    textButton.addEventListener('click', () => sendMessage());
     userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            console.log('Нажат Enter');
-            sendMessage();
-        }
+        if (e.key === 'Enter') sendMessage();
     });
 
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -89,21 +81,17 @@ document.addEventListener('DOMContentLoaded', function() {
     recognition.maxAlternatives = 1;
 
     voiceButton.addEventListener('click', () => {
-        console.log('Запуск голосового ввода');
         recognition.start();
         voiceButton.style.background = '#ff0000';
     });
 
     recognition.onresult = (event) => {
-        const message = event.results[0][0].transcript;
-        console.log('Распознан голос:', message);
-        userInput.value = message;
+        userInput.value = event.results[0][0].transcript;
         sendMessage();
         voiceButton.style.background = 'var(--alien-red)';
     };
 
     recognition.onerror = () => {
-        console.error('Ошибка распознавания голоса');
         chatHistory.push({ role: 'assistant', content: '> Ошибка распознавания голоса. Попробуйте снова.' });
         updateChat();
         voiceButton.style.background = 'var(--alien-red)';
@@ -115,11 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function sendMessage() {
         const message = userInput.value.trim();
-        console.log('Отправка сообщения:', message);
-        if (!message) {
-            console.warn('Пустое сообщение');
-            return;
-        }
+        if (!message) return;
         if (message.length > 500) {
             chatHistory.push({ role: 'assistant', content: '> Ошибка: Запрос слишком длинный. Максимум 500 символов.' });
             updateChat();
@@ -146,14 +130,13 @@ document.addEventListener('DOMContentLoaded', function() {
 3. Квантовая запутанность\nОбъяснение: Частицы связаны на расстоянии. Изменение одной влияет на другую.\nP.S.: Эйнштейн называл это "жутким действием".
 4. Парадокс выбора — "Свобода х Варианты = Паралич"\nОбъяснение: Чем больше вариантов — тем сложнее выбрать. Свобода может превратиться в пытку.\nP.S.: Барри Шварц написал книгу «Парадокс выбора» — бестселлер в психологии.
 5. Эффект “Зомби-компьютера” — "Сон х Экран = Бессознательное действие"\nОбъяснение: Люди продолжают листать ленту, даже когда уже спят — мозг на автопилоте.\nP.S.: Исследования MIT показали: 70% пользователей делают это ежедневно.
-6. “Синдром разбитых окон” — "Беспорядок х Безнаказанность = Рост преступности"\nОбъяснение: Если не чинить мелкие нарушения — растёт уровень серьёзных преступлений.\nP.S.: Применялся в Нью-Йорке в 90-х. ПреCrimeность упала на 75%.
+6. “Синдром разбитых окон” — "Беспорядок х Безнаказанность = Рост преступности"\nОбъяснение: Если не чинить мелкие нарушения — растёт уровень серьёзных преступлений.\nP.S.: Применялся в Нью-Йорке в 90-х. Преступность упала на 75%.
 Отвечай на русском, кратко, ёмко, понятно.`;
         } else {
             systemPrompt = 'Ты — AI-психолог с юмором. Отвечай: \n\n[Что если]: [Остроумная фраза].\n\n[Значит]: [Мотивирующее объяснение].';
         }
 
         try {
-            console.log('Отправка запроса к API:', baseUrl + '/api/openai');
             const response = await fetch(`${baseUrl}/api/openai`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -170,7 +153,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!response.ok) throw new Error(`HTTP ошибка: ${response.status}`);
             const data = await response.json();
-            console.log('Ответ от API:', data);
             if (data.choices && data.choices[0]) {
                 const agentMessage = data.choices[0].message.content;
                 chatHistory.push({ role: 'assistant', content: agentMessage });
@@ -184,11 +166,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     generateImage(agentMessage, 0);
                 }
-            } else {
-                throw new Error('Нет ответа от API');
             }
         } catch (error) {
-            console.error('Ошибка API:', error);
             chatHistory.push({ role: 'assistant', content: `> Ошибка: Не удалось связаться с AI. ${error.message}.` });
             updateChat();
         }
@@ -207,16 +186,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function getImageDimensions(size) {
         switch (size) {
-            case '1x1':
-                return { width: 540, height: 540, maxWidth: 460, lineHeight: 32, fontSizeHeader: 24, fontSizeText: 20 };
-            case '9x16':
-                return { width: 576, height: 1024, maxWidth: 496, lineHeight: 36, fontSizeHeader: 28, fontSizeText: 24 };
-            case '5120x1080':
-                return { width: 5120, height: 1080, maxWidth: 4960, lineHeight: 100, fontSizeHeader: 80, fontSizeText: 60 };
-            case 'desktop':
-                return { width: 1920, height: 1080, maxWidth: 1800, lineHeight: 48, fontSizeHeader: 36, fontSizeText: 32 };
-            default:
-                return { width: 540, height: 540, maxWidth: 460, lineHeight: 32, fontSizeHeader: 24, fontSizeText: 20 };
+            case '1x1': return { width: 540, height: 540, maxWidth: 460, lineHeight: 32, fontSizeHeader: 24, fontSizeText: 20 };
+            case '9x16': return { width: 576, height: 1024, maxWidth: 496, lineHeight: 36, fontSizeHeader: 28, fontSizeText: 24 };
+            case '5120x1080': return { width: 5120, height: 1080, maxWidth: 4960, lineHeight: 100, fontSizeHeader: 80, fontSizeText: 60 };
+            case 'desktop': return { width: 1920, height: 1080, maxWidth: 1800, lineHeight: 48, fontSizeHeader: 36, fontSizeText: 32 };
+            default: return { width: 540, height: 540, maxWidth: 460, lineHeight: 32, fontSizeHeader: 24, fontSizeText: 20 };
         }
     }
 
@@ -264,17 +238,17 @@ document.addEventListener('DOMContentLoaded', function() {
         imgCtx.textBaseline = 'middle';
         const lines = text.split('\n').filter(line => line.trim());
         const textHeight = lines.length * lineHeight * 1.2;
-        let y = (height - textHeight) / 2; // Центрируем по вертикали
+        let y = (height - textHeight) / 2;
         const margin = width * 0.074;
 
+        if (size === '5120x1080' && index === 0) {
+            imgCtx.font = `bold ${fontSizeHeader * 1.5}px "Arial Black"`;
+            imgCtx.fillStyle = '#ff0000';
+            imgCtx.fillText('ПОДПИШИСЬ СЕЙЧАС!', margin, y);
+            y += lineHeight * 1.5;
+        }
+
         lines.forEach(line => {
-            if (size === '5120x1080' && index === 0) {
-                imgCtx.font = `bold ${fontSizeHeader * 1.5}px "Arial Black"`;
-                imgCtx.fillStyle = '#ff0000';
-                const ctaText = 'ПОДПИШИСЬ СЕЙЧАС!';
-                imgCtx.fillText(ctaText, margin, y);
-                y += lineHeight * 1.5;
-            }
             if (line.match(/^["'].*["']|^[^ОбъяснениеP.S.:].*/)) {
                 imgCtx.font = `bold ${fontSizeHeader}px "Arial Black"`;
                 imgCtx.fillStyle = '#ff0000';
@@ -331,13 +305,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         imgCtx.textAlign = 'left';
         imgCtx.textBaseline = 'middle';
-        let y = (height - (lineHeight * 1.2 * (randomMessage.match(/.{1,30}(\s|$)/g).length + 1))) / 2; // Центрируем по вертикали
+        let y = (height - (lineHeight * 1.2 * (randomMessage.match(/.{1,30}(\s|$)/g).length + 1))) / 2;
         const margin = width * 0.074;
 
         imgCtx.font = `bold ${fontSizeHeader}px "Arial Black"`;
         imgCtx.fillStyle = '#ff0000';
-        let currentLine = 'Поставь Лайк ведь:';
-        imgCtx.fillText(currentLine, margin, y);
+        imgCtx.fillText('Поставь Лайк ведь:', margin, y);
         y += lineHeight * 1.2;
 
         imgCtx.font = `bold ${fontSizeText}px "Courier New"`;
@@ -345,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const lines = randomMessage.split('\n').length > 1 ? randomMessage.split('\n') : randomMessage.match(/.{1,30}(\s|$)/g);
         lines.forEach(line => {
             const words = line.split(' ');
-            currentLine = '';
+            let currentLine = '';
             for (let word of words) {
                 const testLine = currentLine + word + ' ';
                 const metrics = imgCtx.measureText(testLine);
@@ -378,16 +351,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentImage++;
             }
         });
-
-        if (currentImage < 7 && paragraphs.length > 0) {
-            const remainingLines = paragraphs.join('\n').split('\n').filter(line => line.trim());
-            let lineIndex = 0;
-            while (currentImage < 7 && lineIndex < remainingLines.length) {
-                images[currentImage].push(remainingLines[lineIndex]);
-                lineIndex++;
-                currentImage++;
-            }
-        }
 
         images.forEach((imageLines, index) => {
             if (imageLines.length > 0) {
@@ -458,7 +421,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     downloadAllButton.addEventListener('click', () => {
-        console.log('Скачивание всех изображений (ZIP)');
         const zip = new JSZip();
         Promise.all(imageUrls.map(({ src, name }) =>
             fetch(src)
@@ -472,7 +434,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     downloadNoZipButton.addEventListener('click', () => {
-        console.log('Скачивание всех изображений (без ZIP)');
         imageUrls.forEach(({ src, name }) => {
             const link = document.createElement('a');
             link.href = src;

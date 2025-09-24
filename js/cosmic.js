@@ -7,10 +7,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const imageOutput = document.getElementById('imageOutput');
     const downloadAllButton = document.getElementById('downloadAllButton');
     const downloadNoZipButton = document.getElementById('downloadNoZipButton');
+    const imageSizeSelect = document.getElementById('imageSize');
 
-    if (!userInput || !textButton || !voiceButton || !chatBody || !imageOutput || !downloadAllButton || !downloadNoZipButton) {
+    if (!userInput || !textButton || !voiceButton || !chatBody || !imageOutput || !downloadAllButton || !downloadNoZipButton || !imageSizeSelect) {
         console.error('Ошибка: Не найдены DOM-элементы', {
-            userInput, textButton, voiceButton, chatBody, imageOutput, downloadAllButton, downloadNoZipButton
+            userInput, textButton, voiceButton, chatBody, imageOutput, downloadAllButton, downloadNoZipButton, imageSizeSelect
         });
         return;
     }
@@ -200,8 +201,24 @@ document.addEventListener('DOMContentLoaded', function() {
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
+    function getImageDimensions() {
+        const size = imageSizeSelect.value;
+        switch (size) {
+            case '1x1':
+                return { width: 540, height: 540, maxWidth: 460, lineHeight: 32, fontSizeHeader: 24, fontSizeText: 20 };
+            case '9x16':
+                return { width: 576, height: 1024, maxWidth: 496, lineHeight: 36, fontSizeHeader: 28, fontSizeText: 24 };
+            case '5120x1080':
+                return { width: 5120, height: 1080, maxWidth: 4960, lineHeight: 60, fontSizeHeader: 48, fontSizeText: 40 };
+            case 'desktop':
+                return { width: 1920, height: 1080, maxWidth: 1800, lineHeight: 48, fontSizeHeader: 36, fontSizeText: 32 };
+            default:
+                return { width: 540, height: 540, maxWidth: 460, lineHeight: 32, fontSizeHeader: 24, fontSizeText: 20 };
+        }
+    }
+
     function generateUniqueBackground(imgCtx, width, height) {
-        const gradient = imgCtx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width / 2);
+        const gradient = imgCtx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) / 2);
         gradient.addColorStop(0, '#1a0000');
         gradient.addColorStop(1, '#000000');
         imgCtx.fillStyle = gradient;
@@ -215,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 0,
                 Math.random() * width,
                 Math.random() * height,
-                Math.random() * 50 + 30
+                Math.random() * (Math.min(width, height) / 10) + 30
             );
             gradient.addColorStop(0, `rgba(255, 0, 0, ${Math.random() * 0.2 + 0.1})`);
             gradient.addColorStop(1, `rgba(139, 0, 0, 0)`);
@@ -223,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
             imgCtx.arc(
                 Math.random() * width,
                 Math.random() * height,
-                Math.random() * 50 + 30,
+                Math.random() * (Math.min(width, height) / 10) + 30,
                 0, Math.PI * 2
             );
             imgCtx.fillStyle = gradient;
@@ -244,7 +261,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Распределяем оставшиеся строки, если абзацев меньше 7
         if (currentImage < 7 && paragraphs.length > 0) {
             const remainingLines = paragraphs.join('\n').split('\n').filter(line => line.trim());
             let lineIndex = 0;
@@ -261,26 +277,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function generateImage(text, index) {
+        const { width, height, maxWidth, lineHeight, fontSizeHeader, fontSizeText } = getImageDimensions();
         const imgCanvas = document.createElement('canvas');
-        imgCanvas.width = 540;
-        imgCanvas.height = 540;
+        imgCanvas.width = width;
+        imgCanvas.height = height;
         const imgCtx = imgCanvas.getContext('2d');
 
-        generateUniqueBackground(imgCtx, 540, 540);
+        generateUniqueBackground(imgCtx, width, height);
 
         imgCtx.textAlign = 'left';
         imgCtx.textBaseline = 'top';
         const lines = text.split('\n').filter(line => line.trim());
         let y = 30;
-        const maxWidth = 460;
-        const lineHeight = 32;
+        const margin = width * 0.074; // Отступы пропорциональны ширине
 
         lines.forEach(line => {
             if (line.match(/^["'].*["']|^[^ОбъяснениеP.S.:].*/)) {
-                imgCtx.font = 'bold 24px "Arial Black"';
+                imgCtx.font = `bold ${fontSizeHeader}px "Arial Black"`;
                 imgCtx.fillStyle = '#ff0000';
             } else {
-                imgCtx.font = 'bold 20px "Courier New"';
+                imgCtx.font = `bold ${fontSizeText}px "Courier New"`;
                 imgCtx.fillStyle = '#f0f0f0';
             }
             const words = line.split(' ');
@@ -289,14 +305,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const testLine = currentLine + word + ' ';
                 const metrics = imgCtx.measureText(testLine);
                 if (metrics.width > maxWidth) {
-                    imgCtx.fillText(currentLine, 40, y);
+                    imgCtx.fillText(currentLine, margin, y);
                     currentLine = word + ' ';
                     y += lineHeight;
                 } else {
                     currentLine = testLine;
                 }
             }
-            imgCtx.fillText(currentLine, 40, y);
+            imgCtx.fillText(currentLine, margin, y);
             y += lineHeight * 1.2;
         });
 
@@ -334,29 +350,27 @@ document.addEventListener('DOMContentLoaded', function() {
             'Это конец. Если ты не подпишешься — ты меня больше не найдёшь.'
         ];
         const randomMessage = subscriptionMessages[Math.floor(Math.random() * subscriptionMessages.length)];
+        const { width, height, maxWidth, lineHeight, fontSizeHeader, fontSizeText } = getImageDimensions();
 
         const imgCanvas = document.createElement('canvas');
-        imgCanvas.width = 540;
-        imgCanvas.height = 540;
+        imgCanvas.width = width;
+        imgCanvas.height = height;
         const imgCtx = imgCanvas.getContext('2d');
 
-        generateUniqueBackground(imgCtx, 540, 540);
+        generateUniqueBackground(imgCtx, width, height);
 
         imgCtx.textAlign = 'left';
         imgCtx.textBaseline = 'top';
         let y = 30;
-        const maxWidth = 460;
-        const lineHeight = 32;
+        const margin = width * 0.074;
 
-        // Отрисовка "Поставь Лайк ведь:" в красном цвете
-        imgCtx.font = 'bold 24px "Arial Black"';
+        imgCtx.font = `bold ${fontSizeHeader}px "Arial Black"`;
         imgCtx.fillStyle = '#ff0000';
         let currentLine = 'Поставь Лайк ведь:';
-        imgCtx.fillText(currentLine, 40, y);
+        imgCtx.fillText(currentLine, margin, y);
         y += lineHeight * 1.2;
 
-        // Отрисовка случайного сообщения в белом цвете
-        imgCtx.font = 'bold 20px "Courier New"';
+        imgCtx.font = `bold ${fontSizeText}px "Courier New"`;
         imgCtx.fillStyle = '#f0f0f0';
         const lines = randomMessage.split('\n').length > 1 ? randomMessage.split('\n') : randomMessage.match(/.{1,30}(\s|$)/g);
         lines.forEach(line => {
@@ -366,14 +380,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const testLine = currentLine + word + ' ';
                 const metrics = imgCtx.measureText(testLine);
                 if (metrics.width > maxWidth) {
-                    imgCtx.fillText(currentLine, 40, y);
+                    imgCtx.fillText(currentLine, margin, y);
                     currentLine = word + ' ';
                     y += lineHeight;
                 } else {
                     currentLine = testLine;
                 }
             }
-            imgCtx.fillText(currentLine, 40, y);
+            imgCtx.fillText(currentLine, margin, y);
             y += lineHeight * 1.2;
         });
 

@@ -8,16 +8,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const downloadAllButton = document.getElementById('downloadAllButton');
     const downloadNoZipButton = document.getElementById('downloadNoZipButton');
     const imageSizeSelect = document.getElementById('imageSize');
+    const downloadSizeSelect = document.getElementById('downloadSize');
+    const marqueeButton = document.getElementById('marqueeButton');
 
-    if (!userInput || !textButton || !voiceButton || !chatBody || !imageOutput || !downloadAllButton || !downloadNoZipButton || !imageSizeSelect) {
+    if (!userInput || !textButton || !voiceButton || !chatBody || !imageOutput || !downloadAllButton || !downloadNoZipButton || !imageSizeSelect || !downloadSizeSelect || !marqueeButton) {
         console.error('Ошибка: Не найдены DOM-элементы', {
-            userInput, textButton, voiceButton, chatBody, imageOutput, downloadAllButton, downloadNoZipButton, imageSizeSelect
+            userInput, textButton, voiceButton, chatBody, imageOutput, downloadAllButton, downloadNoZipButton, imageSizeSelect, downloadSizeSelect, marqueeButton
         });
         return;
     }
 
     let chatHistory = [];
     let imageUrls = [];
+    let originalImages = []; // Для хранения оригинальных данных изображений
 
     // Анимация внеземного фона
     const alienBackground = document.querySelector('.alien-background');
@@ -127,6 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateChat();
         userInput.value = '';
         imageUrls = [];
+        originalImages = [];
         downloadAllButton.style.display = 'none';
         downloadNoZipButton.style.display = 'none';
 
@@ -142,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function() {
 3. Квантовая запутанность\nОбъяснение: Частицы связаны на расстоянии. Изменение одной влияет на другую.\nP.S.: Эйнштейн называл это "жутким действием".
 4. Парадокс выбора — "Свобода х Варианты = Паралич"\nОбъяснение: Чем больше вариантов — тем сложнее выбрать. Свобода может превратиться в пытку.\nP.S.: Барри Шварц написал книгу «Парадокс выбора» — бестселлер в психологии.
 5. Эффект “Зомби-компьютера” — "Сон х Экран = Бессознательное действие"\nОбъяснение: Люди продолжают листать ленту, даже когда уже спят — мозг на автопилоте.\nP.S.: Исследования MIT показали: 70% пользователей делают это ежедневно.
-6. “Синдром разбитых окон” — "Беспорядок х Безнаказанность = Рост преступности"\nОбъяснение: Если не чинить мелкие нарушения — растёт уровень серьёзных преступлений.\nP.S.: Применялся в Нью-Йорке в 90-х. Преступность упала на 75%.
+6. “Синдром разбитых окон” — "Беспорядок х Безнаказанность = Рост преступности"\nОбъяснение: Если не чинить мелкие нарушения — растёт уровень серьёзных преступлений.\nP.S.: Применялся в Нью-Йорке в 90-х. ПреCrimeность упала на 75%.
 Отвечай на русском, кратко, ёмко, понятно.`;
         } else {
             systemPrompt = 'Ты — AI-психолог с юмором. Отвечай: \n\n[Что если]: [Остроумная фраза].\n\n[Значит]: [Мотивирующее объяснение].';
@@ -201,15 +205,14 @@ document.addEventListener('DOMContentLoaded', function() {
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
-    function getImageDimensions() {
-        const size = imageSizeSelect.value;
+    function getImageDimensions(size) {
         switch (size) {
             case '1x1':
                 return { width: 540, height: 540, maxWidth: 460, lineHeight: 32, fontSizeHeader: 24, fontSizeText: 20 };
             case '9x16':
                 return { width: 576, height: 1024, maxWidth: 496, lineHeight: 36, fontSizeHeader: 28, fontSizeText: 24 };
             case '5120x1080':
-                return { width: 5120, height: 1080, maxWidth: 4960, lineHeight: 60, fontSizeHeader: 48, fontSizeText: 40 };
+                return { width: 5120, height: 1080, maxWidth: 4960, lineHeight: 100, fontSizeHeader: 80, fontSizeText: 60 };
             case 'desktop':
                 return { width: 1920, height: 1080, maxWidth: 1800, lineHeight: 48, fontSizeHeader: 36, fontSizeText: 32 };
             default:
@@ -248,36 +251,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function distributeTextOnImages(paragraphs) {
-        imageOutput.innerHTML = '';
-        const images = [[], [], [], [], [], [], []];
-        let currentImage = 0;
-
-        paragraphs.forEach(paragraph => {
-            if (currentImage < 7) {
-                const lines = paragraph.split('\n').filter(line => line.trim());
-                images[currentImage].push(...lines);
-                currentImage++;
-            }
-        });
-
-        if (currentImage < 7 && paragraphs.length > 0) {
-            const remainingLines = paragraphs.join('\n').split('\n').filter(line => line.trim());
-            let lineIndex = 0;
-            while (currentImage < 7 && lineIndex < remainingLines.length) {
-                images[currentImage].push(remainingLines[lineIndex]);
-                lineIndex++;
-                currentImage++;
-            }
-        }
-
-        images.forEach((imageLines, index) => {
-            if (imageLines.length > 0) generateImage(imageLines.join('\n'), index);
-        });
-    }
-
-    function generateImage(text, index) {
-        const { width, height, maxWidth, lineHeight, fontSizeHeader, fontSizeText } = getImageDimensions();
+    function generateImage(text, index, size = imageSizeSelect.value) {
+        const { width, height, maxWidth, lineHeight, fontSizeHeader, fontSizeText } = getImageDimensions(size);
         const imgCanvas = document.createElement('canvas');
         imgCanvas.width = width;
         imgCanvas.height = height;
@@ -286,12 +261,20 @@ document.addEventListener('DOMContentLoaded', function() {
         generateUniqueBackground(imgCtx, width, height);
 
         imgCtx.textAlign = 'left';
-        imgCtx.textBaseline = 'top';
+        imgCtx.textBaseline = 'middle';
         const lines = text.split('\n').filter(line => line.trim());
-        let y = 30;
-        const margin = width * 0.074; // Отступы пропорциональны ширине
+        const textHeight = lines.length * lineHeight * 1.2;
+        let y = (height - textHeight) / 2; // Центрируем по вертикали
+        const margin = width * 0.074;
 
         lines.forEach(line => {
+            if (size === '5120x1080' && index === 0) {
+                imgCtx.font = `bold ${fontSizeHeader * 1.5}px "Arial Black"`;
+                imgCtx.fillStyle = '#ff0000';
+                const ctaText = 'ПОДПИШИСЬ СЕЙЧАС!';
+                imgCtx.fillText(ctaText, margin, y);
+                y += lineHeight * 1.5;
+            }
             if (line.match(/^["'].*["']|^[^ОбъяснениеP.S.:].*/)) {
                 imgCtx.font = `bold ${fontSizeHeader}px "Arial Black"`;
                 imgCtx.fillStyle = '#ff0000';
@@ -316,27 +299,14 @@ document.addEventListener('DOMContentLoaded', function() {
             y += lineHeight * 1.2;
         });
 
-        const img = new Image();
-        img.src = imgCanvas.toDataURL('image/png');
-        imageUrls.push({ src: img.src, name: `content_${index + 1}.png` });
-
-        const imgContainer = document.createElement('div');
-        imgContainer.className = 'carousel-item';
-        imgContainer.appendChild(img);
-
-        const downloadLink = document.createElement('a');
-        downloadLink.href = img.src;
-        downloadLink.download = `content_${index + 1}.png`;
-        downloadLink.textContent = 'Скачать';
-        downloadLink.style.display = 'block';
-        downloadLink.style.color = 'var(--alien-red)';
-        downloadLink.style.marginTop = '0.5rem';
-        imgContainer.appendChild(downloadLink);
-
-        imageOutput.appendChild(imgContainer);
+        const imgData = { text, index, src: imgCanvas.toDataURL('image/png') };
+        if (!originalImages.some(img => img.text === text && img.index === index)) {
+            originalImages.push(imgData);
+        }
+        return imgData;
     }
 
-    function generateSubscriptionImage() {
+    function generateSubscriptionImage(size = imageSizeSelect.value) {
         const subscriptionMessages = [
             'Мы больше не пересечёмся — если ты не подпишешься. Это твой последний шанс меня увидеть.',
             'Ты не увидишь меня снова — если не нажмёшь “подписаться”. Решай.',
@@ -350,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'Это конец. Если ты не подпишешься — ты меня больше не найдёшь.'
         ];
         const randomMessage = subscriptionMessages[Math.floor(Math.random() * subscriptionMessages.length)];
-        const { width, height, maxWidth, lineHeight, fontSizeHeader, fontSizeText } = getImageDimensions();
+        const { width, height, maxWidth, lineHeight, fontSizeHeader, fontSizeText } = getImageDimensions(size);
 
         const imgCanvas = document.createElement('canvas');
         imgCanvas.width = width;
@@ -360,8 +330,8 @@ document.addEventListener('DOMContentLoaded', function() {
         generateUniqueBackground(imgCtx, width, height);
 
         imgCtx.textAlign = 'left';
-        imgCtx.textBaseline = 'top';
-        let y = 30;
+        imgCtx.textBaseline = 'middle';
+        let y = (height - (lineHeight * 1.2 * (randomMessage.match(/.{1,30}(\s|$)/g).length + 1))) / 2; // Центрируем по вертикали
         const margin = width * 0.074;
 
         imgCtx.font = `bold ${fontSizeHeader}px "Arial Black"`;
@@ -391,16 +361,92 @@ document.addEventListener('DOMContentLoaded', function() {
             y += lineHeight * 1.2;
         });
 
-        const img = new Image();
-        img.src = imgCanvas.toDataURL('image/png');
-        imageUrls.push({ src: img.src, name: 'subscribe.png' });
+        return { text: randomMessage, index: 'subscribe', src: imgCanvas.toDataURL('image/png') };
+    }
 
+    function distributeTextOnImages(paragraphs) {
+        imageOutput.innerHTML = '';
+        imageUrls = [];
+        originalImages = [];
+        const images = [[], [], [], [], [], [], []];
+        let currentImage = 0;
+
+        paragraphs.forEach(paragraph => {
+            if (currentImage < 7) {
+                const lines = paragraph.split('\n').filter(line => line.trim());
+                images[currentImage].push(...lines);
+                currentImage++;
+            }
+        });
+
+        if (currentImage < 7 && paragraphs.length > 0) {
+            const remainingLines = paragraphs.join('\n').split('\n').filter(line => line.trim());
+            let lineIndex = 0;
+            while (currentImage < 7 && lineIndex < remainingLines.length) {
+                images[currentImage].push(remainingLines[lineIndex]);
+                lineIndex++;
+                currentImage++;
+            }
+        }
+
+        images.forEach((imageLines, index) => {
+            if (imageLines.length > 0) {
+                const imgData = generateImage(imageLines.join('\n'), index);
+                imageUrls.push({ src: imgData.src, name: `content_${index + 1}.png` });
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'carousel-item';
+                const img = new Image();
+                img.src = imgData.src;
+                imgContainer.appendChild(img);
+
+                const downloadLink = document.createElement('a');
+                downloadLink.href = imgData.src;
+                downloadLink.download = `content_${index + 1}.png`;
+                downloadLink.textContent = 'Скачать';
+                downloadLink.style.display = 'block';
+                downloadLink.style.color = 'var(--alien-red)';
+                downloadLink.style.marginTop = '0.5rem';
+                imgContainer.appendChild(downloadLink);
+
+                imageOutput.appendChild(imgContainer);
+            }
+        });
+    }
+
+    downloadSizeSelect.addEventListener('change', () => {
+        const size = downloadSizeSelect.value;
+        imageOutput.innerHTML = '';
+        imageUrls = [];
+        originalImages.forEach(({ text, index }) => {
+            const imgData = generateImage(text, index, size);
+            imageUrls.push({ src: imgData.src, name: index === 'subscribe' ? 'subscribe.png' : `content_${index + 1}.png` });
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'carousel-item';
+            const img = new Image();
+            img.src = imgData.src;
+            imgContainer.appendChild(img);
+
+            const downloadLink = document.createElement('a');
+            downloadLink.href = imgData.src;
+            downloadLink.download = index === 'subscribe' ? 'subscribe.png' : `content_${index + 1}.png`;
+            downloadLink.textContent = 'Скачать';
+            downloadLink.style.display = 'block';
+            downloadLink.style.color = 'var(--alien-red)';
+            downloadLink.style.marginTop = '0.5rem';
+            imgContainer.appendChild(downloadLink);
+
+            imageOutput.appendChild(imgContainer);
+        });
+        const subImage = generateSubscriptionImage(size);
+        imageUrls.push({ src: subImage.src, name: 'subscribe.png' });
         const imgContainer = document.createElement('div');
         imgContainer.className = 'carousel-item';
+        const img = new Image();
+        img.src = subImage.src;
         imgContainer.appendChild(img);
 
         const downloadLink = document.createElement('a');
-        downloadLink.href = img.src;
+        downloadLink.href = subImage.src;
         downloadLink.download = 'subscribe.png';
         downloadLink.textContent = 'Скачать';
         downloadLink.style.display = 'block';
@@ -409,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
         imgContainer.appendChild(downloadLink);
 
         imageOutput.appendChild(imgContainer);
-    }
+    });
 
     downloadAllButton.addEventListener('click', () => {
         console.log('Скачивание всех изображений (ZIP)');
@@ -435,5 +481,9 @@ document.addEventListener('DOMContentLoaded', function() {
             link.click();
             document.body.removeChild(link);
         });
+    });
+
+    marqueeButton.addEventListener('click', () => {
+        document.getElementById('marqueeModal').style.display = 'block';
     });
 });
